@@ -4,19 +4,23 @@ Classroom portal — vanilla JS/Express/Supabase/Python WebSockets, deployed on 
 ## Layout
 - `frontend/` — vanilla JS/HTML/CSS (Vercel)
 - `api/` — Express accounts/API service (Render)
-- `realtime/` — Python websocket service (Render)
+- `realtime/` — Python (FastAPI) websocket service that pushes live notifications (Render)
 - `supabase/` — SQL migrations and schema notes
 - `docs/` — project brief and session notes
 
-## Run the API locally
-See [`api/README.md`](api/README.md).
-
-## Run the frontend locally
-Start the API first (the dashboards call it at `API_URL` in `frontend/js/config.js`), then:
+## Run everything locally
+Three processes, each in its own terminal:
 ```sh
-cd frontend && python3 -m http.server 8000   # then open http://localhost:8000
+cd api && npm run dev                                            # API          :3000  (see api/README.md)
+cd realtime && .venv/bin/uvicorn main:app --port 8001 --env-file .env   # realtime :8001  (see realtime/README.md)
+cd frontend && python3 -m http.server 8000                       # frontend     :8000
 ```
-The API only accepts browser requests from `http://localhost:8000` by default (`CORS_ORIGIN`).
+Then open http://localhost:8000. The realtime service is optional: without it everything
+works except the teacher's live notifications.
+
+The dashboards call the API at `API_URL` and the realtime service at `REALTIME_WS_URL`
+(both in `frontend/js/config.js`). The API only accepts browser requests from
+`http://localhost:8000` by default (`CORS_ORIGIN`).
 
 ## Known simplifications
 Deliberate scope cuts for a demo, not oversights:
@@ -34,3 +38,15 @@ Deliberate scope cuts for a demo, not oversights:
   enforcement are non-goals, so `due_date` is informational and late work is accepted
   unflagged. There are no delete routes or buttons (RLS would let a teacher delete their own
   classes and assignments, but nothing exposes it).
+- **Live notifications use an in-memory registry and are best-effort.** The realtime service
+  tracks connected teachers in a process-local dict, so a restart drops every connection (browsers
+  reconnect on their own) and a second instance would split teachers between processes; scaling out
+  needs a shared pub/sub such as Redis. Nothing is queued: if a teacher is offline, or the service is
+  down when a student submits, that push is simply missed. The submission itself is always saved, and
+  the dashboard's Refresh (or a reconnect) shows it.
+- **The WebSocket token is only verified when the connection opens.** A tab left open past the
+  token's expiry (about an hour) stays connected and keeps receiving pushes until it next
+  reconnects, which authenticates with a fresh token. The stream only ever carries that teacher's
+  own notifications, so re-checking mid-connection wasn't worth the complexity for a demo.
+- **Resubmissions trigger the same toast as first submissions.** A submission is an upsert, so the
+  API can't tell a new one from a replacement, and the teacher sees an identical notification for both.

@@ -39,13 +39,27 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
       (`js/teacher.js`, `js/student.js`, shared `js/api.js` + `js/dom.js`). API's
       `GET /assignments?class_id=` and `GET /submissions?assignment_id=` filters are now
       optional (RLS scopes the unfiltered lists) so the student dashboard loads in 3 calls.
-      Teacher's submissions list is manual (Refresh) until Stage 5 makes it live.
+      Teacher's submissions list was manual (Refresh) until Stage 5 made it live.
       Attachments/file links are intentionally not rendered yet (Stage 6): a student can
       write any `file_url` straight to Supabase, so Stage 6 must render only http(s) links
       or add a DB check constraint.
-- [ ] Stage 5: Python websocket server
+- [x] Stage 5: Python websocket server — tested by user in two browser windows (toast,
+      badges, auto-refresh, multi-tab, recovery after the service goes down). FastAPI service in
+      `realtime/` (venv at `realtime/.venv`, gitignored): `POST /notify` (shared-secret header) +
+      `WS /ws` (first message = Supabase access token, verified via Supabase Auth with the anon
+      key only; no service-role key or JWT secret), in-memory registry keyed by teacher id
+      (multi-tab). Express `notify.js` calls /notify fire-and-forget (3 s timeout, failures only
+      logged). Frontend `js/live.js` (reconnect with backoff) + toasts/badges in `js/teacher.js`.
+      Needs `REALTIME_URL` + `NOTIFY_SECRET` in api/.env and `NOTIFY_SECRET` in realtime/.env.
 - [ ] Stage 6: S3 file upload
+      * Only render http(s) file links (attachment_url / file_url), or add a check constraint on
+        `file_url`: a student can write any `file_url` straight to Supabase and RLS allows it, so
+        a `javascript:` URL could otherwise run in the teacher's browser when clicked.
 - [ ] Stage 7: Deploy (Vercel + Render)
+      * The deployed WebSocket URL must be `wss://` (set `REALTIME_WS_URL` in
+        `frontend/js/config.js`; a page served over https can't open plain `ws://`).
+      * Render's free tier cold-starts services, so a push to a sleeping realtime service can hit
+        Express's 3 s notify timeout and be missed (the submission is still saved).
 - [ ] Stage 8: README
 
 (Update this checklist as you go so a future session knows exactly where things
