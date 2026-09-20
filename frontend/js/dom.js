@@ -27,3 +27,20 @@ export function makeMessage() {
 export function formatDate(iso) {
   return new Date(iso).toLocaleString();
 }
+
+// A dismissible pop-up in the corner of the page. Clicking it dismisses it and
+// runs onClick; it also disappears on its own after a few seconds.
+export function showToast(text, onClick) {
+  let box = document.querySelector(".toasts");
+  if (!box) {
+    box = el("div", { class: "toasts", "aria-live": "polite" });
+    document.body.append(box);
+  }
+  const toast = el("div", { class: "toast", role: "status" }, text);
+  toast.addEventListener("click", () => {
+    toast.remove();
+    onClick?.();
+  });
+  box.append(toast);
+  setTimeout(() => toast.remove(), 8000);
+}

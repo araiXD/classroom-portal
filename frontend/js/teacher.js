@@ -1,5 +1,6 @@
 import { api } from "./api.js";
-import { el, formatDate, makeMessage } from "./dom.js";
+import { el, formatDate, makeMessage, showToast } from "./dom.js";
+import { connectLive } from "./live.js";
 
 export async function mount(root) {
   const message = makeMessage();
@@ -12,6 +13,11 @@ export async function mount(root) {
   let assignments = [];
   let selectedAssignment = null;
   let assignmentList = null; // kept between renders so the "post" form below it keeps its text
+
+  // Live submissions for assignments the teacher isn't looking at: assignment_id -> { classId, count }.
+  const unread = new Map();
+  const classUnread = (classId) => [...unread.values()].reduce((n, u) => n + (u.classId === classId ? u.count : 0), 0);
+  const badge = (count) => count > 0 && el("span", { class: "badge" }, `${count} new`);
 
   // Wrap an async UI handler so failures land in the message line.
   const guard = (action) => async (...args) => {
@@ -62,6 +68,7 @@ export async function mount(root) {
                 "li",
                 { class: cls.id === selectedClass?.id ? "selected" : null },
                 el("strong", {}, cls.name),
+                badge(classUnread(cls.id)),
                 " ",
                 el("span", { class: "muted" }, "Join code: ", el("code", {}, cls.join_code)),
                 " ",
@@ -139,6 +146,7 @@ export async function mount(root) {
                 "li",
                 { class: a.id === selectedAssignment?.id ? "selected" : null },
                 el("strong", {}, a.title),
+                badge(unread.get(a.id)?.count ?? 0),
                 " ",
                 el("span", { class: "muted" }, a.due_date ? `Due ${formatDate(a.due_date)}` : "No due date"),
                 a.description && el("p", { class: "pre" }, a.description),
@@ -154,6 +162,8 @@ export async function mount(root) {
   async function selectAssignment(a) {
     const submissions = await api.get(`/submissions?assignment_id=${a.id}`);
     selectedAssignment = a;
+    unread.delete(a.id);
+    renderClasses();
     fillAssignmentList();
     renderSubmissions(submissions);
   }
@@ -183,7 +193,51 @@ export async function mount(root) {
     );
   }
 
+  // --- live notifications ---------------------------------------------------
+
+  const liveStatus = el("p", { class: "live" });
+  let wasOffline = false;
+
+  function onLiveStatus(state) {
+    const labels = { live: "● Live updates on", connecting: "○ Live updates: connecting…", offline: "○ Live updates off, retrying…" };
+    liveStatus.textContent = labels[state];
+    liveStatus.className = state === "live" ? "live on" : "live";
+    if (state === "offline") {
+      wasOffline = true;
+    } else if (state === "live" && wasOffline) {
+      // Anything submitted while we were disconnected wasn't pushed; catch up on what's open.
+      wasOffline = false;
+      if (selectedAssignment) guard(() => selectAssignment(selectedAssignment))();
+    }
+  }
+
+  async function onLiveMessage(msg) {
+    if (msg.type !== "submission") return;
+    if (selectedAssignment?.id === msg.assignment_id) {
+      await selectAssignment(selectedAssignment); // already looking at it: show it right away
+    } else {
+      const entry = unread.get(msg.assignment_id) ?? { classId: msg.class_id, count: 0 };
+      entry.count += 1;
+      unread.set(msg.assignment_id, entry);
+      renderClasses();
+      if (selectedClass?.id === msg.class_id) fillAssignmentList();
+    }
+    showToast(`${msg.student_name} submitted "${msg.assignment_title}" (${msg.class_name})`, guard(() => openSubmissions(msg)));
+  }
+
+  // Jump to a submission's assignment (used when a toast is clicked).
+  async function openSubmissions({ class_id, assignment_id }) {
+    if (selectedClass?.id !== class_id) {
+      const cls = classes.find((c) => c.id === class_id);
+      if (!cls) return;
+      await selectClass(cls);
+    }
+    const assignment = assignments.find((a) => a.id === assignment_id);
+    if (assignment) await selectAssignment(assignment);
+  }
+
   root.replaceChildren(
+    liveStatus,
     message.node,
     el("section", {}, el("h2", {}, "Create a class"), createForm),
     classesBox,
@@ -191,4 +245,5 @@ export async function mount(root) {
     submissionsBox,
   );
   await guard(loadClasses)();
+  connectLive({ onStatus: onLiveStatus, onMessage: guard(onLiveMessage) });
 }
