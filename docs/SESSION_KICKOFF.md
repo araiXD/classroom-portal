@@ -26,7 +26,7 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
   directly rather than guessing — I'd rather answer a question than redo work.
 
 ## Current status
-- [ ] Stage 1: Repo + Supabase setup
+- [x] Stage 1: Repo + Supabase setup — migration applied and RLS verified by user
 - [ ] Stage 2: Auth + roles
 - [ ] Stage 3: Express API
 - [ ] Stage 4: Frontend dashboards
