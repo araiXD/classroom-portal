@@ -28,17 +28,15 @@ submissionsRouter.post("/", requireRole("student"), async (req, res) => {
   res.status(201).json(submission);
 });
 
-// Teacher: every submission for one of their assignments, with the student's name.
-// Student: just their own (RLS scopes both).
+// Teacher: submissions to assignments in their classes, with the student's name.
+// Student: just their own. RLS scopes both; ?assignment_id= narrows to one assignment.
 submissionsRouter.get("/", async (req, res) => {
-  const assignmentId = uuid(req.query.assignment_id, "assignment_id");
-  res.json(
-    unwrap(
-      await req.db
-        .from("submissions")
-        .select("*, student:profiles(full_name)")
-        .eq("assignment_id", assignmentId)
-        .order("submitted_at", { ascending: false }),
-    ),
-  );
+  let query = req.db
+    .from("submissions")
+    .select("*, student:profiles(full_name)")
+    .order("submitted_at", { ascending: false });
+  if (req.query.assignment_id !== undefined) {
+    query = query.eq("assignment_id", uuid(req.query.assignment_id, "assignment_id"));
+  }
+  res.json(unwrap(await query));
 });

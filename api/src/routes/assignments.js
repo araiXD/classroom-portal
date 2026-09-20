@@ -19,18 +19,15 @@ assignmentsRouter.post("/", requireRole("teacher"), async (req, res) => {
   res.status(201).json(unwrap(await req.db.from("assignments").insert(row).select().single()));
 });
 
-// Assignments in a class the caller teaches or is enrolled in. Other classes
-// return an empty list (RLS hides them).
+// Assignments in classes the caller teaches or is enrolled in (RLS scopes this),
+// optionally narrowed to one class with ?class_id=. A class you can't see just
+// yields an empty list.
 assignmentsRouter.get("/", async (req, res) => {
-  const classId = uuid(req.query.class_id, "class_id");
-  res.json(
-    unwrap(
-      await req.db
-        .from("assignments")
-        .select()
-        .eq("class_id", classId)
-        .order("due_date", { ascending: true, nullsFirst: false })
-        .order("created_at", { ascending: true }),
-    ),
-  );
+  let query = req.db
+    .from("assignments")
+    .select()
+    .order("due_date", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
+  if (req.query.class_id !== undefined) query = query.eq("class_id", uuid(req.query.class_id, "class_id"));
+  res.json(unwrap(await query));
 });

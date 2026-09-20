@@ -29,12 +29,14 @@ Errors are `{ "error": "message" }`.
 | POST   | `/classes/join`                   | student | `{ code }` → enrolls the caller. Failed attempts rate-limited (10 / 15 min / user) |
 | GET    | `/classes/:id`                    | any     | 404 if you can't see it                                      |
 | POST   | `/assignments`                    | teacher | `{ class_id, title, description?, due_date?, attachment_url? }` → 201; 403 if not your class |
-| GET    | `/assignments?class_id=`          | any     | empty list if the class isn't yours / you aren't enrolled    |
+| GET    | `/assignments[?class_id=]`        | any     | all assignments in your classes; `class_id` narrows to one (a class you can't see gives an empty list) |
 | POST   | `/submissions`                    | student | `{ assignment_id, content?, file_url? }` (at least one) → 201; replaces your earlier submission; 403 if not enrolled |
-| GET    | `/submissions?assignment_id=`     | any     | teacher: all submissions (with `student.full_name`); student: own |
+| GET    | `/submissions[?assignment_id=]`   | any     | teacher: submissions in your classes (with `student.full_name`); student: only your own; `assignment_id` narrows to one assignment |
 
 `POST /classes/join`, `GET /classes`, `GET /submissions` go beyond the brief's route list:
 students need a way to enroll, and the Stage 4 dashboards need to list classes and submissions.
+The two filters are optional so the student dashboard can load everything in one call each;
+when given they're validated as UUIDs.
 
 ## Getting a token to try it with curl
 
