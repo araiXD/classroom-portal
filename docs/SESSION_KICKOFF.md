@@ -14,8 +14,8 @@ closes all three in one go — don't suggest swapping the stack (e.g. "just use
 React" or "skip Supabase for Firebase") unless something is actually broken.
 
 ## Repo
-- GitHub: <PASTE REPO URL HERE ONCE CREATED>
-- Cloned locally at: <PASTE LOCAL PATH HERE>
+- GitHub: https://github.com/araiXD/classroom-portal.git
+- Cloned locally at: /home/rie/Documents/Projects/classroom-portal
 
 ## How I want to work
 - Go stage by stage from `PROJECT_BRIEF.md` — never "build the whole thing."
