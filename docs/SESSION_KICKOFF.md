@@ -29,7 +29,17 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
 - [x] Stage 1: Repo + Supabase setup — migration applied and RLS verified by user
 - [x] Stage 2: Auth + roles — signup trigger creates profiles row; login/signup page
       and minimal dashboard tested by user
-- [ ] Stage 3: Express API
+- [x] Stage 3: Express API — built, migration 3 (join codes) applied, 60/60 e2e checks pass
+      against the real Supabase project (roles, RLS isolation, join codes, rate limit).
+      Decisions: join codes for enrollment; per-request client with caller's JWT (no
+      service-role key in API); added GET /classes, GET /submissions, POST /classes/join.
+      * TEST DATA STILL IN THE DATABASE awaiting cleanup: two sets of throwaway accounts
+        (`test-{teacher,teacher2,student,outsider}@example.com` and the same with `-r2`),
+        their profiles, and the classes/enrollments/assignments/submissions they created.
+        Cleanup SQL (cascades to everything):
+        `delete from auth.users where email like 'test-%@example.com';`
+      * "Confirm email" in Supabase Auth was turned off for testing — turn it back on
+        after cleanup.
 - [ ] Stage 4: Frontend dashboards
 - [ ] Stage 5: Python websocket server
 - [ ] Stage 6: S3 file upload

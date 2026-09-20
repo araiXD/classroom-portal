@@ -8,6 +8,9 @@ Classroom portal — vanilla JS/Express/Supabase/Python WebSockets, deployed on 
 - `supabase/` — SQL migrations and schema notes
 - `docs/` — project brief and session notes
 
+## Run the API locally
+See [`api/README.md`](api/README.md).
+
 ## Run the frontend locally
 ```sh
 cd frontend && python3 -m http.server 8000   # then open http://localhost:8000

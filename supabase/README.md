@@ -16,6 +16,8 @@ drop what it creates (or reset the project) first.
 - `20260919000100_profile_on_signup.sql` — trigger that creates the `profiles` row when a
   user signs up (reads `full_name` and `role` from signup metadata; anything other than
   `teacher` becomes `student`) and drops the now-unneeded client-side insert policy
+- `20260919000200_join_codes.sql` — adds `classes.join_code` (12 random hex chars, unique)
+  and `join_class(code)`, the only way for a student to enroll themselves
 
 ## Check it worked
 
@@ -33,13 +35,13 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public';
 |---------------|----------------------------------------|-------------------------------------------|
 | `profiles`    | own + students in their classes        | own + teachers of their classes           |
 | `classes`     | CRUD own                               | read enrolled                             |
-| `enrollments` | read/add/remove for own classes        | read own                                  |
+| `enrollments` | read/add/remove for own classes        | read own; enroll self only via `join_class()` |
 | `assignments` | CRUD in own classes                    | read in enrolled classes                  |
 | `submissions` | read for assignments in own classes    | read/insert/update own, enrolled classes  |
 
 Notes:
-- The service-role key bypasses RLS. Anything Express does with it needs its own
-  ownership checks (Stage 3).
+- The service-role key bypasses RLS, so no service here uses it. The Express API acts as the
+  caller (their JWT), which keeps these policies as the single source of truth.
 - `profiles` has no insert/update/delete policy: rows are created only by the signup
   trigger, and a role can't be changed afterwards.
 - One submission per student per assignment (`unique (assignment_id, student_id)`);
