@@ -27,7 +27,8 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
 
 ## Current status
 - [x] Stage 1: Repo + Supabase setup — migration applied and RLS verified by user
-- [ ] Stage 2: Auth + roles
+- [x] Stage 2: Auth + roles — signup trigger creates profiles row; login/signup page
+      and minimal dashboard tested by user
 - [ ] Stage 3: Express API
 - [ ] Stage 4: Frontend dashboards
 - [ ] Stage 5: Python websocket server

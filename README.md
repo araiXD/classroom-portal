@@ -7,3 +7,8 @@ Classroom portal — vanilla JS/Express/Supabase/Python WebSockets, deployed on 
 - `realtime/` — Python websocket service (Render)
 - `supabase/` — SQL migrations and schema notes
 - `docs/` — project brief and session notes
+
+## Run the frontend locally
+```sh
+cd frontend && python3 -m http.server 8000   # then open http://localhost:8000
+```

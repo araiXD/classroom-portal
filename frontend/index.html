@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Classroom Portal</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="card">
+    <h1>Classroom Portal</h1>
+
+    <form id="login-form">
+      <h2>Log in</h2>
+      <label>Email <input type="email" name="email" autocomplete="email" required></label>
+      <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+      <button type="submit">Log in</button>
+      <p class="switch">No account? <a href="#signup" data-show="signup-form">Sign up</a></p>
+    </form>
+
+    <form id="signup-form" hidden>
+      <h2>Sign up</h2>
+      <label>Full name <input type="text" name="full_name" autocomplete="name" required></label>
+      <label>Email <input type="email" name="email" autocomplete="email" required></label>
+      <label>Password <input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+      <label>I am a
+        <select name="role" required>
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+        </select>
+      </label>
+      <button type="submit">Create account</button>
+      <p class="switch">Already registered? <a href="#login" data-show="login-form">Log in</a></p>
+    </form>
+
+    <p id="message" role="status"></p>
+  </main>
+
+  <script type="module" src="js/auth-page.js"></script>
+</body>
+</html>

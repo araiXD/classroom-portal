@@ -1,0 +1,49 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  font-family: system-ui, sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.card {
+  width: min(24rem, 92vw);
+  padding: 2rem;
+  background: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.12);
+}
+
+h1 { margin: 0 0 1rem; font-size: 1.4rem; }
+h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
+
+form { display: grid; gap: 0.75rem; }
+
+label { display: grid; gap: 0.25rem; font-size: 0.9rem; }
+
+input, select {
+  padding: 0.5rem;
+  font: inherit;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+}
+
+button {
+  padding: 0.6rem;
+  font: inherit;
+  color: #fff;
+  background: #2563eb;
+  border: 0;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+button:hover { background: #1d4ed8; }
+
+.switch { margin: 0; font-size: 0.85rem; }
+
+#message { min-height: 1.2em; margin: 1rem 0 0; font-size: 0.9rem; }
+#message.error { color: #b91c1c; }

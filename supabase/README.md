@@ -9,8 +9,13 @@ Schema lives in `migrations/` as plain SQL (Supabase CLI naming, so `supabase li
 2. SQL Editor → New query → paste `migrations/20260919000000_initial_schema.sql` → Run.
 3. Copy the project URL and keys into a local `.env` (see `../.env.example`).
 
-The migration isn't idempotent — run it once on a fresh project. To redo it, drop the
-tables/types/functions it creates (or reset the project) first.
+Run the migrations in filename order, each once. They aren't idempotent — to redo one,
+drop what it creates (or reset the project) first.
+
+- `20260919000000_initial_schema.sql` — tables, helper functions, RLS
+- `20260919000100_profile_on_signup.sql` — trigger that creates the `profiles` row when a
+  user signs up (reads `full_name` and `role` from signup metadata; anything other than
+  `teacher` becomes `student`) and drops the now-unneeded client-side insert policy
 
 ## Check it worked
 
@@ -35,6 +40,7 @@ select tablename, rowsecurity from pg_tables where schemaname = 'public';
 Notes:
 - The service-role key bypasses RLS. Anything Express does with it needs its own
   ownership checks (Stage 3).
-- `profiles` has no update/delete policy yet, so a role can't be changed after signup.
+- `profiles` has no insert/update/delete policy: rows are created only by the signup
+  trigger, and a role can't be changed afterwards.
 - One submission per student per assignment (`unique (assignment_id, student_id)`);
   resubmitting is an update.
