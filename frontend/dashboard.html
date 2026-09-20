@@ -6,12 +6,17 @@
   <title>Dashboard — Classroom Portal</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-  <main class="card">
-    <h1>Classroom Portal</h1>
-    <p id="who">Loading…</p>
-    <button id="logout" type="button">Log out</button>
-  </main>
+<body class="dashboard">
+  <div class="wrap">
+    <header>
+      <h1>Classroom Portal</h1>
+      <div>
+        <span id="who">Loading…</span>
+        <button id="logout" type="button" class="secondary">Log out</button>
+      </div>
+    </header>
+    <main id="app"></main>
+  </div>
 
   <script type="module" src="js/dashboard.js"></script>
 </body>

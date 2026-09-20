@@ -33,14 +33,16 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
       against the real Supabase project (roles, RLS isolation, join codes, rate limit).
       Decisions: join codes for enrollment; per-request client with caller's JWT (no
       service-role key in API); added GET /classes, GET /submissions, POST /classes/join.
-      * TEST DATA STILL IN THE DATABASE awaiting cleanup: two sets of throwaway accounts
-        (`test-{teacher,teacher2,student,outsider}@example.com` and the same with `-r2`),
-        their profiles, and the classes/enrollments/assignments/submissions they created.
-        Cleanup SQL (cascades to everything):
-        `delete from auth.users where email like 'test-%@example.com';`
-      * "Confirm email" in Supabase Auth was turned off for testing — turn it back on
-        after cleanup.
-- [ ] Stage 4: Frontend dashboards
+      * Test accounts/data cleaned up and "Confirm email" re-enabled by user.
+- [x] Stage 4: Frontend dashboards — tested by user in the browser (teacher and student
+      flows). `frontend/dashboard.html` swaps a teacher or student view by role
+      (`js/teacher.js`, `js/student.js`, shared `js/api.js` + `js/dom.js`). API's
+      `GET /assignments?class_id=` and `GET /submissions?assignment_id=` filters are now
+      optional (RLS scopes the unfiltered lists) so the student dashboard loads in 3 calls.
+      Teacher's submissions list is manual (Refresh) until Stage 5 makes it live.
+      Attachments/file links are intentionally not rendered yet (Stage 6): a student can
+      write any `file_url` straight to Supabase, so Stage 6 must render only http(s) links
+      or add a DB check constraint.
 - [ ] Stage 5: Python websocket server
 - [ ] Stage 6: S3 file upload
 - [ ] Stage 7: Deploy (Vercel + Render)

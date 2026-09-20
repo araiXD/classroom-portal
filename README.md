@@ -12,9 +12,11 @@ Classroom portal — vanilla JS/Express/Supabase/Python WebSockets, deployed on 
 See [`api/README.md`](api/README.md).
 
 ## Run the frontend locally
+Start the API first (the dashboards call it at `API_URL` in `frontend/js/config.js`), then:
 ```sh
 cd frontend && python3 -m http.server 8000   # then open http://localhost:8000
 ```
+The API only accepts browser requests from `http://localhost:8000` by default (`CORS_ORIGIN`).
 
 ## Known simplifications
 Deliberate scope cuts for a demo, not oversights:

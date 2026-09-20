@@ -19,7 +19,11 @@ if (!session) {
     .single();
 
   // textContent, not innerHTML: full_name is user-supplied.
-  who.textContent = error
-    ? `Signed in, but no profile found: ${error.message}`
-    : `Signed in as ${profile.full_name} (${profile.role})`;
+  if (error) {
+    who.textContent = `Signed in, but no profile found: ${error.message}`;
+  } else {
+    who.textContent = `Signed in as ${profile.full_name} (${profile.role})`;
+    const view = await import(profile.role === "teacher" ? "./teacher.js" : "./student.js");
+    await view.mount(document.getElementById("app"));
+  }
 }
