@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireRole } from "../middleware/auth.js";
 import { HttpError, unwrap } from "../errors.js";
+import { notifySubmission } from "../notify.js";
 import { bodyOf, httpUrl, text, uuid } from "../validate.js";
 
 export const submissionsRouter = Router();
@@ -25,6 +26,7 @@ submissionsRouter.post("/", requireRole("student"), async (req, res) => {
       .select()
       .single(),
   );
+  notifySubmission(req.db, req.user, submission); // fire-and-forget; never affects the response
   res.status(201).json(submission);
 });
 
