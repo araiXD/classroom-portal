@@ -26,6 +26,9 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
   directly rather than guessing — I'd rather answer a question than redo work.
 
 ## Current status
+**Stages 1-6 are done and pushed. Stage 7 (deploy) is next and has NOT been started; wait for the
+user to say go.** See the Stage 7 notes below before starting.
+
 - [x] Stage 1: Repo + Supabase setup — migration applied and RLS verified by user
 - [x] Stage 2: Auth + roles — signup trigger creates profiles row; login/signup page
       and minimal dashboard tested by user
@@ -66,7 +69,7 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
       * LEFTOVER TEST OBJECT for the user to delete in the S3 console (the IAM user has no
         DeleteObject): `test-check/20260921061801-2397/valid/hello.pdf`
         (delete the whole `test-check/` prefix).
-- [ ] Stage 7: Deploy (Vercel + Render)
+- [ ] Stage 7: Deploy (Vercel + Render) — NOT STARTED
       * The deployed WebSocket URL must be `wss://` (set `REALTIME_WS_URL` in
         `frontend/js/config.js`; a page served over https can't open plain `ws://`).
       * Render's free tier cold-starts services, so a push to a sleeping realtime service can hit
