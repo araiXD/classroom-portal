@@ -37,17 +37,3 @@ export function isoDate(value, field) {
   if (!date || Number.isNaN(date.getTime())) throw bad(`${field} must be an ISO 8601 date`);
   return date.toISOString();
 }
-
-// http(s) only: these URLs end up as links in the frontend, so no javascript: etc.
-export function httpUrl(value, field) {
-  const raw = text(value, field, { max: 2048, required: false });
-  if (raw === null) return null;
-  let url;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw bad(`${field} must be a valid URL`);
-  }
-  if (url.protocol !== "https:" && url.protocol !== "http:") throw bad(`${field} must be an http(s) URL`);
-  return raw;
-}

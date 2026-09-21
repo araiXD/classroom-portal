@@ -17,6 +17,20 @@ if (realtimeUrl && (!notifySecret || notifySecret.length < 16)) {
   throw new Error("REALTIME_URL is set, so NOTIFY_SECRET (at least 16 characters) is required");
 }
 
+// File uploads (S3) are optional: without S3_BUCKET the upload/download routes answer 503.
+// Credentials are read only from these env vars (api/.env) and handed to the client
+// explicitly, so the AWS SDK never falls back to an ambient profile in ~/.aws.
+const s3Bucket = process.env.S3_BUCKET || null;
+let s3 = null;
+if (s3Bucket) {
+  s3 = {
+    bucket: s3Bucket,
+    region: required("AWS_REGION"),
+    accessKeyId: required("AWS_ACCESS_KEY_ID"),
+    secretAccessKey: required("AWS_SECRET_ACCESS_KEY"),
+  };
+}
+
 export const config = {
   port: Number(process.env.PORT ?? 3000),
   supabaseUrl: required("SUPABASE_URL"),
@@ -26,4 +40,5 @@ export const config = {
     .map((origin) => origin.trim()),
   realtimeUrl,
   notifySecret,
+  s3,
 };

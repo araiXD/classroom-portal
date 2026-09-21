@@ -6,6 +6,7 @@ import { requireAuth } from "./middleware/auth.js";
 import { assignmentsRouter } from "./routes/assignments.js";
 import { classesRouter } from "./routes/classes.js";
 import { submissionsRouter } from "./routes/submissions.js";
+import { uploadsRouter } from "./routes/uploads.js";
 
 export function createApp() {
   const app = express();
@@ -18,6 +19,7 @@ export function createApp() {
   app.use("/classes", requireAuth, classesRouter);
   app.use("/assignments", requireAuth, assignmentsRouter);
   app.use("/submissions", requireAuth, submissionsRouter);
+  app.use("/uploads", requireAuth, uploadsRouter);
 
   app.use((req, res) => res.status(404).json({ error: "Not found" }));
   app.use(errorHandler);
