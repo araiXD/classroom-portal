@@ -1,5 +1,6 @@
 import { api } from "./api.js";
-import { el, formatDate, makeMessage } from "./dom.js";
+import { el, fileNameOf, formatDate, makeMessage } from "./dom.js";
+import { downloadButton, FILE_ACCEPT, FILE_HINT, uploadFile } from "./upload.js";
 
 export async function mount(root) {
   const message = makeMessage();
@@ -9,12 +10,14 @@ export async function mount(root) {
   let assignments = [];
   let submissionsByAssignment = new Map(); // assignment_id -> the caller's submission
 
+  const showError = (err) => message.show(err.message, true);
+
   // Wrap an async UI handler so failures land in the message line.
   const guard = (action) => async (...args) => {
     try {
       await action(...args);
     } catch (err) {
-      message.show(err.message, true);
+      showError(err);
     }
   };
 
@@ -78,9 +81,10 @@ export async function mount(root) {
     const existing = submissionsByAssignment.get(a.id);
     const textarea = el(
       "textarea",
-      { name: "content", rows: 4, required: true, maxlength: 10000, placeholder: "Type your answer" },
+      { name: "content", rows: 4, maxlength: 10000, placeholder: "Type your answer (or attach a file)" },
       existing?.content ?? "",
     );
+    const fileInput = el("input", { name: "file", type: "file", accept: FILE_ACCEPT });
 
     const article = el(
       "article",
@@ -88,23 +92,36 @@ export async function mount(root) {
       el("h3", {}, a.title),
       el("p", { class: "muted" }, a.due_date ? `Due ${formatDate(a.due_date)}` : "No due date"),
       a.description && el("p", { class: "pre" }, a.description),
+      a.attachment_url && el("p", {}, downloadButton(`Attachment: ${fileNameOf(a.attachment_url)}`, `/assignments/${a.id}/attachment`, showError)),
       el(
         "p",
         { class: existing ? "status done" : "status" },
         existing ? `Submitted ${formatDate(existing.submitted_at)}` : "Not submitted",
       ),
+      existing?.file_url && el("p", {}, downloadButton(`Your file: ${fileNameOf(existing.file_url)}`, `/submissions/${existing.id}/file`, showError)),
       el(
         "form",
         {
           onsubmit: guard(async (e) => {
             e.preventDefault();
-            const saved = await api.post("/submissions", { assignment_id: a.id, content: textarea.value });
+            // Resubmitting without choosing a file keeps the file already submitted.
+            let file_url = existing?.file_url ?? undefined;
+            const file = fileInput.files[0];
+            if (!textarea.value.trim() && !file && !file_url) {
+              throw new Error("Add some text or attach a file.");
+            }
+            if (file) {
+              message.show(`Uploading ${file.name}…`);
+              file_url = await uploadFile(file, { kind: "submission", assignment_id: a.id });
+            }
+            const saved = await api.post("/submissions", { assignment_id: a.id, content: textarea.value, file_url });
             submissionsByAssignment.set(a.id, saved);
             article.replaceWith(renderAssignment(a)); // only this card, so other drafts survive
             message.show(`Submitted "${a.title}".`);
           }),
         },
         textarea,
+        el("label", {}, existing?.file_url ? `Replace your file (optional): ${FILE_HINT}` : `File (optional): ${FILE_HINT}`, fileInput),
         el("button", { type: "submit" }, existing ? "Resubmit" : "Submit"),
       ),
     );

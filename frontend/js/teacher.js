@@ -1,6 +1,7 @@
 import { api } from "./api.js";
-import { el, formatDate, makeMessage, showToast } from "./dom.js";
+import { el, fileNameOf, formatDate, makeMessage, showToast } from "./dom.js";
 import { connectLive } from "./live.js";
+import { downloadButton, FILE_ACCEPT, FILE_HINT, uploadFile } from "./upload.js";
 
 export async function mount(root) {
   const message = makeMessage();
@@ -19,12 +20,14 @@ export async function mount(root) {
   const classUnread = (classId) => [...unread.values()].reduce((n, u) => n + (u.classId === classId ? u.count : 0), 0);
   const badge = (count) => count > 0 && el("span", { class: "badge" }, `${count} new`);
 
+  const showError = (err) => message.show(err.message, true);
+
   // Wrap an async UI handler so failures land in the message line.
   const guard = (action) => async (...args) => {
     try {
       await action(...args);
     } catch (err) {
-      message.show(err.message, true);
+      showError(err);
     }
   };
 
@@ -96,6 +99,7 @@ export async function mount(root) {
     const titleInput = el("input", { name: "title", required: true, maxlength: 200 });
     const descInput = el("textarea", { name: "description", rows: 3, maxlength: 5000 });
     const dueInput = el("input", { name: "due_date", type: "datetime-local" });
+    const fileInput = el("input", { name: "file", type: "file", accept: FILE_ACCEPT });
 
     const form = el(
       "form",
@@ -105,6 +109,11 @@ export async function mount(root) {
           const body = { class_id: cls.id, title: titleInput.value };
           if (descInput.value.trim()) body.description = descInput.value;
           if (dueInput.value) body.due_date = new Date(dueInput.value).toISOString(); // local time -> UTC
+          const file = fileInput.files[0];
+          if (file) {
+            message.show(`Uploading ${file.name}…`);
+            body.attachment_url = await uploadFile(file, { kind: "attachment", class_id: cls.id });
+          }
           const posted = await api.post("/assignments", body);
           form.reset();
           message.show(`Posted "${posted.title}".`);
@@ -119,6 +128,7 @@ export async function mount(root) {
       el("label", {}, "Title", titleInput),
       el("label", {}, "Description (optional)", descInput),
       el("label", {}, "Due (optional)", dueInput),
+      el("label", {}, `Attachment (optional): ${FILE_HINT}`, fileInput),
       el("button", { type: "submit" }, "Post assignment"),
     );
 
@@ -150,6 +160,7 @@ export async function mount(root) {
                 " ",
                 el("span", { class: "muted" }, a.due_date ? `Due ${formatDate(a.due_date)}` : "No due date"),
                 a.description && el("p", { class: "pre" }, a.description),
+                a.attachment_url && el("p", {}, downloadButton(`Attachment: ${fileNameOf(a.attachment_url)}`, `/assignments/${a.id}/attachment`, showError)),
                 el("button", { type: "button", class: "secondary", onclick: guard(() => selectAssignment(a)) }, "View submissions"),
               ),
             ),
@@ -187,6 +198,7 @@ export async function mount(root) {
                 " ",
                 el("span", { class: "muted" }, `Submitted ${formatDate(s.submitted_at)}`),
                 el("p", { class: "pre" }, s.content ?? "(no text)"),
+                s.file_url && el("p", {}, downloadButton(`File: ${fileNameOf(s.file_url)}`, `/submissions/${s.id}/file`, showError)),
               ),
             ),
           ),

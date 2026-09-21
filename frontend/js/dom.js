@@ -44,3 +44,8 @@ export function showToast(text, onClick) {
   box.append(toast);
   setTimeout(() => toast.remove(), 8000);
 }
+
+// The file name at the end of an S3 object key ("attachments/…/<random>/notes.pdf").
+export function fileNameOf(key) {
+  return key.slice(key.lastIndexOf("/") + 1);
+}
