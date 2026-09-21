@@ -6,6 +6,9 @@ Classroom portal — vanilla JS/Express/Supabase/Python WebSockets, deployed on 
 - `api/` — Express accounts/API service (Render)
 - `realtime/` — Python (FastAPI) websocket service that pushes live notifications (Render)
 - `supabase/` — SQL migrations and schema notes
+- S3 (private bucket) — assignment attachments and submission files. Nothing in it is public: the API
+  checks who's asking and hands out short-lived presigned URLs, and browsers upload and download
+  directly against S3, so file bytes never pass through Express (setup: `docs/AWS_S3_SETUP.md`)
 - `docs/` — project brief and session notes
 
 ## Run everything locally
@@ -51,6 +54,11 @@ Deliberate scope cuts for a demo, not oversights:
   own notifications, so re-checking mid-connection wasn't worth the complexity for a demo.
 - **Resubmissions trigger the same toast as first submissions.** A submission is an upsert, so the
   API can't tell a new one from a replacement, and the teacher sees an identical notification for both.
+- **File limits are fixed and small.** One file per assignment and one per submission, at most 5 MB, and
+  only PDF, plain text, PNG, JPEG or Word (.docx): no zips, slides, video, or multi-file, chunked or
+  resumable uploads. The limits are constants in `api/src/files.js`, and S3 enforces the same cap and
+  type through the signed upload policy. A download whose object is missing lands on S3's own error
+  page rather than an in-app message.
 - **File uploads: no cleanup and no quota.** Replaced or abandoned files (for example, an upload whose
   assignment failed to post) stay in the bucket, and a signed-in user can upload up to the size cap
   repeatedly. Deleting a class or assignment doesn't delete its files either. Per-user quotas, S3
