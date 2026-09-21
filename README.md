@@ -16,7 +16,8 @@ cd realtime && .venv/bin/uvicorn main:app --port 8001 --env-file .env   # realti
 cd frontend && python3 -m http.server 8000                       # frontend     :8000
 ```
 Then open http://localhost:8000. The realtime service is optional: without it everything
-works except the teacher's live notifications.
+works except the teacher's live notifications. File uploads are optional too: they need an
+S3 bucket, set up per [`docs/AWS_S3_SETUP.md`](docs/AWS_S3_SETUP.md).
 
 The dashboards call the API at `API_URL` and the realtime service at `REALTIME_WS_URL`
 (both in `frontend/js/config.js`). The API only accepts browser requests from
@@ -50,3 +51,12 @@ Deliberate scope cuts for a demo, not oversights:
   own notifications, so re-checking mid-connection wasn't worth the complexity for a demo.
 - **Resubmissions trigger the same toast as first submissions.** A submission is an upsert, so the
   API can't tell a new one from a replacement, and the teacher sees an identical notification for both.
+- **File uploads: no cleanup and no quota.** Replaced or abandoned files (for example, an upload whose
+  assignment failed to post) stay in the bucket, and a signed-in user can upload up to the size cap
+  repeatedly. Deleting a class or assignment doesn't delete its files either. Per-user quotas, S3
+  lifecycle rules, and object deletion are what you'd add; a budget alert covers it for a demo.
+- **Uploaded file types are trusted by declaration.** S3 enforces the content type the API signed, but
+  that comes from the browser, and nothing scans or sniffs the bytes. Downloads are forced to
+  `attachment` so a file is never rendered inline, and the allowlist is small (PDF, text, PNG, JPEG, docx).
+- **A student can't remove a submitted file, only replace it.** Resubmitting without choosing a file keeps
+  the existing one.

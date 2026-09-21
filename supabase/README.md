@@ -44,5 +44,9 @@ Notes:
   caller (their JWT), which keeps these policies as the single source of truth.
 - `profiles` has no insert/update/delete policy: rows are created only by the signup
   trigger, and a role can't be changed afterwards.
+- `assignments.attachment_url` and `submissions.file_url` hold **S3 object keys**, not URLs (the column
+  names predate the S3 design). The API validates their shape on write and before signing a download
+  (see `api/README.md`); the database doesn't constrain them, because RLS deliberately lets you write
+  your own rows, so anything reading these columns must not trust them.
 - One submission per student per assignment (`unique (assignment_id, student_id)`);
   resubmitting is an update.

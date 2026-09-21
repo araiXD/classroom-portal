@@ -40,9 +40,8 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
       `GET /assignments?class_id=` and `GET /submissions?assignment_id=` filters are now
       optional (RLS scopes the unfiltered lists) so the student dashboard loads in 3 calls.
       Teacher's submissions list was manual (Refresh) until Stage 5 made it live.
-      Attachments/file links are intentionally not rendered yet (Stage 6): a student can
-      write any `file_url` straight to Supabase, so Stage 6 must render only http(s) links
-      or add a DB check constraint.
+      (File attachments were deferred to Stage 6, where they became S3 keys with signed
+      downloads instead of rendered links.)
 - [x] Stage 5: Python websocket server — tested by user in two browser windows (toast,
       badges, auto-refresh, multi-tab, recovery after the service goes down). FastAPI service in
       `realtime/` (venv at `realtime/.venv`, gitignored): `POST /notify` (shared-secret header) +
@@ -51,10 +50,22 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
       (multi-tab). Express `notify.js` calls /notify fire-and-forget (3 s timeout, failures only
       logged). Frontend `js/live.js` (reconnect with backoff) + toasts/badges in `js/teacher.js`.
       Needs `REALTIME_URL` + `NOTIFY_SECRET` in api/.env and `NOTIFY_SECRET` in realtime/.env.
-- [ ] Stage 6: S3 file upload
-      * Only render http(s) file links (attachment_url / file_url), or add a check constraint on
-        `file_url`: a student can write any `file_url` straight to Supabase and RLS allows it, so
-        a `javascript:` URL could otherwise run in the teacher's browser when clicked.
+- [x] Stage 6: S3 file upload — tested by user in the browser (attachment upload, submission
+      file upload, both downloads, refusals; bucket stays private) and against real S3 by a
+      scripted check (19 checks: valid upload + download round trip; S3 itself rejects an oversize,
+      empty, wrong-type, tampered-key or bad-signature upload; unsigned/altered download URLs get
+      403; downloads forced to attachment; CORS allows only localhost:8000). Setup guide:
+      `docs/AWS_S3_SETUP.md`. Express presigns: `POST /uploads` (shared for assignment
+      attachments + submission files; presigned POST so S3 enforces a 5 MB cap and the exact
+      content type), `GET /assignments/:id/attachment`, `GET /submissions/:id/file`. Private
+      bucket, all public access blocked; AWS creds only in api/.env, passed explicitly to the
+      client. Columns attachment_url / file_url hold S3 KEYS (validated on write and again
+      before signing, since RLS lets clients write them directly). Frontend: `js/upload.js` +
+      file pickers/download buttons in teacher.js and student.js. Resubmitting without a new
+      file keeps the existing one.
+      * LEFTOVER TEST OBJECT for the user to delete in the S3 console (the IAM user has no
+        DeleteObject): `test-check/20260921061801-2397/valid/hello.pdf`
+        (delete the whole `test-check/` prefix).
 - [ ] Stage 7: Deploy (Vercel + Render)
       * The deployed WebSocket URL must be `wss://` (set `REALTIME_WS_URL` in
         `frontend/js/config.js`; a page served over https can't open plain `ws://`).
