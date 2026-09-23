@@ -68,3 +68,6 @@ Deliberate scope cuts for a demo, not oversights:
   `attachment` so a file is never rendered inline, and the allowlist is small (PDF, text, PNG, JPEG, docx).
 - **A student can't remove a submitted file, only replace it.** Resubmitting without choosing a file keeps
   the existing one.
+- **CORS is scoped to the production URL only, not Vercel's preview deployments.** This project has
+  no PR/branch-preview workflow, so a preview deployment's dynamic subdomain simply can't call the API;
+  only `main`'s production URL is allowed.
