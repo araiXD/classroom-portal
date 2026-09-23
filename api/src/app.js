@@ -11,6 +11,14 @@ import { uploadsRouter } from "./routes/uploads.js";
 export function createApp() {
   const app = express();
 
+  // Render (like Heroku) puts one reverse proxy in front of the app and sets
+  // X-Forwarded-For. Trusting exactly that one hop makes req.ip and req.secure
+  // correct, and stops express-rate-limit's proxy-mismatch validation from
+  // erroring on every request. `1` trusts one hop, not "any proxy" (which would
+  // let a client spoof its own IP via the header) — harmless locally, where
+  // there's no proxy and the header is never present.
+  app.set("trust proxy", 1);
+
   app.use(cors({ origin: config.corsOrigins }));
   app.use(express.json({ limit: "100kb" }));
 
