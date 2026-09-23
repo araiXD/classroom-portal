@@ -95,10 +95,13 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
         both (committed). User had NOT pushed the two earlier stage-7 commits before Render
         built, so the trust-proxy fix wasn't in that first deploy — bundled a reminder to
         push once (covers all 3 commits) and let auto-deploy redeploy both before Phase D.
-      * NEXT: user pushes, confirms both Render services show a fresh deploy after the push,
-        then continues with Phase D (Vercel import) through Phase F (live test) from
-        `docs/DEPLOY.md` — nothing further needed from Claude until Phase E's callback
-        (wiring the Vercel URL into CORS_ORIGIN, Supabase, and S3 CORS) or a problem comes up.
+      * User pushed, did Phase D. Vercel URL: https://classroom-portal-three.vercel.app
+        (DEPLOY.md's placeholder examples updated to match). The bare "/" 404 on both Render
+        services (Express's and FastAPI's default 404 JSON) is expected -- neither defines a
+        route for it, only /health and the real API/WS routes.
+      * NEXT: Phase E (user does this in Render/Supabase/AWS consoles) -- add CORS_ORIGIN on
+        the API service, set Supabase Auth Site URL + Redirect URLs, update S3 CORS -- all
+        using the real Vercel URL above, then Phase F (live test) from docs/DEPLOY.md.
 - [ ] Stage 8: README
 
 (Update this checklist as you go so a future session knows exactly where things

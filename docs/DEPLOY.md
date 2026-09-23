@@ -128,7 +128,7 @@ Vercel dashboard → **Add New...** → **Project** → import `classroom-portal
 | Install Command | leave on its default (there's no `package.json` in `frontend/`, so it'll skip this) |
 | Environment Variables | none — `config.js` is a plain committed file |
 
-Deploy. You get a URL like `https://classroom-portal.vercel.app` — **write that down too**.
+Deploy. You get a URL like `https://classroom-portal-three.vercel.app` — **write that down too**.
 
 ## Phase E — wire the frontend URL back into everything else
 
@@ -138,14 +138,14 @@ Now that the Vercel URL exists, three places need it.
 
 | Env var | Value |
 |---|---|
-| `CORS_ORIGIN` | `https://classroom-portal.vercel.app` (no trailing slash) |
+| `CORS_ORIGIN` | `https://classroom-portal-three.vercel.app` (no trailing slash) |
 
 Save — Render restarts the service (no rebuild needed, it's just an env var).
 
 **2. Supabase** → your project → **Authentication** → **URL Configuration**:
-- **Site URL**: `https://classroom-portal.vercel.app` — this is where a signup confirmation email's
+- **Site URL**: `https://classroom-portal-three.vercel.app` — this is where a signup confirmation email's
   link points.
-- **Redirect URLs**: add `https://classroom-portal.vercel.app/**`. If `http://localhost:8000/**`
+- **Redirect URLs**: add `https://classroom-portal-three.vercel.app/**`. If `http://localhost:8000/**`
   isn't already listed, add that too so local dev keeps working.
 
 **3. S3 bucket** → **Permissions** → **CORS** → replace the rule with:
@@ -153,7 +153,7 @@ Save — Render restarts the service (no rebuild needed, it's just an env var).
 ```json
 [
   {
-    "AllowedOrigins": ["http://localhost:8000", "https://classroom-portal.vercel.app"],
+    "AllowedOrigins": ["http://localhost:8000", "https://classroom-portal-three.vercel.app"],
     "AllowedMethods": ["POST"],
     "AllowedHeaders": ["*"],
     "ExposeHeaders": [],
@@ -164,7 +164,7 @@ Save — Render restarts the service (no rebuild needed, it's just an env var).
 
 ## Phase F — test the live site
 
-Open `https://classroom-portal.vercel.app`.
+Open `https://classroom-portal-three.vercel.app`.
 
 1. **Log in** with one of your real accounts. A blank page or a console error here means Supabase
    URL/key or CORS is wrong — check the browser console first.
