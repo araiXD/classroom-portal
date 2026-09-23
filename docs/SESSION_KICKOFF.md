@@ -89,6 +89,16 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
       * Version pins for Render: NODE_VERSION=22.11.0 (api), PYTHON_VERSION=3.13.5 (realtime),
         set as dashboard env vars (not version-pin files, to avoid monorepo root-directory
         ambiguity about where Render looks for them).
+      * CHECKPOINT RESOLVED: user did Phases A-C. Realtime URL
+        https://classroom-portal-realtime.onrender.com, API URL
+        https://classroom-portal-api.onrender.com, both /health OK. config.js updated with
+        both (committed). User had NOT pushed the two earlier stage-7 commits before Render
+        built, so the trust-proxy fix wasn't in that first deploy — bundled a reminder to
+        push once (covers all 3 commits) and let auto-deploy redeploy both before Phase D.
+      * NEXT: user pushes, confirms both Render services show a fresh deploy after the push,
+        then continues with Phase D (Vercel import) through Phase F (live test) from
+        `docs/DEPLOY.md` — nothing further needed from Claude until Phase E's callback
+        (wiring the Vercel URL into CORS_ORIGIN, Supabase, and S3 CORS) or a problem comes up.
 - [ ] Stage 8: README
 
 (Update this checklist as you go so a future session knows exactly where things
