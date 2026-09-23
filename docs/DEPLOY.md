@@ -190,3 +190,62 @@ Open `https://classroom-portal-three.vercel.app`.
 
 Render's free tier spins a service down after inactivity, so the *first* request after a quiet
 period on either backend service can be slow (cold start) — that's expected, not a bug.
+
+## Phase G — verify the data directly (optional, but worth doing once)
+
+Phase F proves the site *behaves* correctly. This proves the *data* landed where it should —
+worth doing once after the first real end-to-end test (a class created, a student enrolled, an
+assignment with an attachment, a submission with a file).
+
+**1. Supabase → SQL Editor** — one query walks the whole chain for your newest class:
+
+```sql
+select
+  c.id as class_id, c.name as class, c.join_code,
+  t.full_name as teacher,
+  s.id as student_id, s.full_name as student,
+  a.id as assignment_id, a.title as assignment, a.attachment_url,
+  sub.content, sub.file_url, sub.submitted_at
+from public.classes c
+join public.profiles t on t.id = c.teacher_id
+join public.enrollments e on e.class_id = c.id
+join public.profiles s on s.id = e.student_id
+join public.assignments a on a.class_id = c.id
+left join public.submissions sub on sub.assignment_id = a.id and sub.student_id = s.id
+order by c.created_at desc
+limit 10;
+```
+
+Check: `attachment_url` and `file_url` are **S3 keys, not URLs** —
+`attachments/<class_id>/<teacher_id>/<32 hex>/<filename>` and
+`submissions/<assignment_id>/<student_id>/<32 hex>/<filename>` respectively. The `<class_id>` /
+`<assignment_id>` / `<student_id>` segments should match that row's own `class_id`, `assignment_id`
+and `student_id` columns exactly — that match is the whole point of the key-validation code in
+`api/src/files.js`, so seeing it hold in production is a real check of that logic, not just a look.
+
+(Table Editor works too if you'd rather click through `classes` / `enrollments` / `assignments` /
+`submissions` than write SQL — the query above just puts every row of interest in one place.)
+
+**2. S3 console → your bucket** — search/filter by the `attachments/<class_id>/` and
+`submissions/<assignment_id>/<student_id>/` prefixes from the query above. Each should contain
+exactly one object, named after the file you uploaded. Click one open and try its plain "Object URL"
+directly — it should still deny you (`AccessDenied`); if it doesn't, something's wrong with the
+bucket's public-access block.
+
+While you're in the console: delete the leftover `test-check/` prefix from the earlier real-S3
+check, if you haven't already (the IAM user has no `DeleteObject`, so only you can).
+
+**3. Render → `classroom-portal-api` → Logs.** This service has no request-access logging (nothing
+logs a line for a normal 2xx), so *the absence of anything alarming is the signal*: no
+`"Live notification not sent: ..."` warning (would mean the call to the realtime service failed), no
+`REALTIME_URL not set` or `S3_BUCKET not set` warnings at startup (would mean an env var is missing),
+and no stack traces.
+
+**4. Render → `classroom-portal-realtime` → Logs.** Unlike the API, uvicorn logs every request by
+default. You should see lines like `"GET /ws HTTP/1.1" 101` (the teacher dashboard's websocket) and
+`"POST /notify HTTP/1.1" 200 OK` (the API telling it about the submission) — no `500`s, no
+tracebacks.
+
+**5. Browser, if you haven't already:** click the attachment/file download buttons on the live site
+for the ones you just uploaded — confirms the round trip (signed URL issued, S3 actually serves the
+object) beyond just the upload succeeding.
