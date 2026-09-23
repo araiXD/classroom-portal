@@ -146,3 +146,6 @@ vite.config.ts.timestamp-*
 .venv/
 __pycache__/
 *.py[cod]
+
+# Personal/local notes, not for the repo
+NOTES.local.md

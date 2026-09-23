@@ -3,7 +3,9 @@
 A small classroom-management demo (teachers post assignments, students submit, teachers get a live
 notification) built to mirror a real EdTech stack. **Read `docs/SESSION_KICKOFF.md` first**: its checklist
 says which stage we're on and where the last session stopped; keep it updated. The spec, data model,
-stages and non-goals are in `docs/PROJECT_BRIEF.md`. Don't copy either one here.
+stages and non-goals are in `docs/PROJECT_BRIEF.md`. Don't copy either one here. Background/motivation
+that isn't useful to a reader of the repo may be in `NOTES.local.md` at the repo root (git-ignored, so
+it may not exist in every checkout) — check it if it seems relevant to a decision.
 
 Stack: vanilla JS frontend, Express API, Supabase (Postgres + Auth + RLS), FastAPI websocket service,
 private S3 bucket. Don't propose swapping it unless something is actually broken.
@@ -21,15 +23,9 @@ Each service has its own git-ignored `.env` (copy from its `.env.example`). Sche
 `supabase/migrations/`, applied by hand in the Supabase SQL editor, in filename order. There is no committed
 test suite; verify with throwaway scripts (see security rules). Stop by PID: `pkill -f` matches its own shell.
 
-## How we work
-- One stage at a time, in order. Never start the next stage until the user says so.
-- The user tests each stage in the browser themselves, then we commit it: in logical pieces
-  (e.g. API, frontend, docs), one commit each. The user pushes.
-- Ask before real design decisions (not syntax or debugging): give a recommendation and ask.
-- No gold-plating. If something is tempting to polish, note it and move on.
-- Don't add scope silently (new routes, columns, dependencies): say what and why first.
-- Stop any server you started before handing back, so ports aren't fought over.
-- End each stage with exact steps for the user to test it.
+## Working process
+See `docs/SESSION_KICKOFF.md`'s "Working process" section — kept there as the single copy so it
+never drifts out of sync with this file.
 
 ## Security rules
 - Never print or commit `.env` contents. Check presence with `grep -c '^NAME=.' file`, never `cat`.

@@ -1,32 +1,30 @@
 # Session Kickoff — Classroom Portal
 
 ## Context
-I'm a CS grad (CSUF, May 2026) job-hunting for full-stack/EdTech developer roles.
-I'm building this project to close specific keyword/skill gaps against a real job
-posting, not just to have "a project." Full spec is in `PROJECT_BRIEF.md` —
-read that first for the data model, stages, and non-goals.
-
-## Why this project exists (don't relitigate scope — just build it)
-Target job stack: vanilla JS/HTML/CSS, Express, Supabase, Python websockets,
-deployed on Vercel/Render. My resume was missing: a SQL/Supabase database, any
-cloud platform (AWS/Azure/GCP), and a fully solo-owned project. This build
-closes all three in one go — don't suggest swapping the stack (e.g. "just use
-React" or "skip Supabase for Firebase") unless something is actually broken.
+Full spec is in `PROJECT_BRIEF.md` — read that first for the data model, stages, and non-goals.
 
 ## Repo
 - GitHub: https://github.com/araiXD/classroom-portal.git
 - Cloned locally at: /home/rie/Documents/Projects/classroom-portal
 
-## How I want to work
-- Go stage by stage from `PROJECT_BRIEF.md` — never "build the whole thing."
-- After each stage: I run/test it myself before moving on.
-- Commit after every completed stage, even small ones.
-- If a stage is tempting to gold-plate, stop and move to the next stage instead.
-- If you (Claude) hit a real design decision (not a syntax/debug issue), ask me
-  directly rather than guessing — I'd rather answer a question than redo work.
+## Resuming a session
+Open a fresh Claude Code session in the repo root, then check "Current status" below for the
+stage checklist and continue from there.
+
+## Working process
+- Work stage by stage from `PROJECT_BRIEF.md`; never build everything at once.
+- Each completed stage is tested in the browser before moving to the next.
+- Commit after every completed stage, even small ones — in logical pieces (e.g. API, frontend,
+  docs), one commit each; the user pushes.
+- If a stage is tempting to gold-plate, stop and move to the next stage instead. Scope isn't
+  added silently (new routes, columns, dependencies) — say what and why first.
+- A real design decision (not a syntax or debugging issue) gets a question and a recommendation,
+  not a guess.
+- Any server started for testing is stopped before handing back, so ports aren't fought over.
+- Each stage ends with exact steps to test it.
 
 ## Current status
-**Stages 1-6 are done and pushed. Stage 7 (deploy) is IN PROGRESS — see the checkpoint below.**
+**Stages 1-7 are done and live. Stage 8 (README) is in progress.**
 
 - [x] Stage 1: Repo + Supabase setup — migration applied and RLS verified by user
 - [x] Stage 2: Auth + roles — signup trigger creates profiles row; login/signup page
@@ -65,33 +63,23 @@ React" or "skip Supabase for Firebase") unless something is actually broken.
       before signing, since RLS lets clients write them directly). Frontend: `js/upload.js` +
       file pickers/download buttons in teacher.js and student.js. Resubmitting without a new
       file keeps the existing one.
-      * LEFTOVER TEST OBJECT for the user to delete in the S3 console (the IAM user has no
-        DeleteObject): `test-check/20260921061801-2397/valid/hello.pdf`
-        (delete the whole `test-check/` prefix).
-- [x] Stage 7: Deploy (Vercel + Render) — LIVE, tested end-to-end by user in the browser (teacher
+      * A one-off test object from real-S3 verification may still need deleting from the bucket
+        (`test-check/` prefix) — not explicitly confirmed.
+- [x] Stage 7: Deploy (Vercel + Render) — LIVE, tested end-to-end in the browser (teacher
       created a class, posted an assignment with an attachment; student joined, submitted with a
       file). Frontend: https://classroom-portal-three.vercel.app · API:
       https://classroom-portal-api.onrender.com · realtime: https://classroom-portal-realtime.onrender.com.
       Same Supabase project and S3 bucket as local dev, reused for production. Full walkthrough
       in `docs/DEPLOY.md` (account setup, exact Render root dir/build/start commands and env
       vars per service, `frontend/js/config.js`'s hostname-based URL switch, wiring the Vercel
-      URL into `CORS_ORIGIN`/Supabase Auth/S3 CORS, a troubleshooting table, and an optional
-      Phase G for verifying the data directly in Supabase/S3/Render logs after a real test).
+      URL into `CORS_ORIGIN`/Supabase Auth/S3 CORS, a troubleshooting table, and a Phase G for
+      verifying the data directly in Supabase/S3/Render logs after a real test — done, data
+      checked out).
       Also fixed in `api/src/app.js`: `app.set("trust proxy", 1)`, required behind Render's
       reverse proxy or `express-rate-limit` errors on every request.
-- [ ] Stage 8: README
+- [ ] Stage 8: README — in progress. Adding a live-demo link, a Mermaid architecture diagram,
+      stack rationale, and a feature-to-real-world-pattern table. Screenshots to follow once
+      supplied.
 
-(Update this checklist as you go so a future session knows exactly where things
-left off.)
-
-## Other things worth knowing about me (only if relevant to a decision)
-- Comfortable with Linux/dev tooling (dual-boot Arch background), so terminal-
-  heavy workflows are fine.
-- Prior related work: an RTX-sponsored capstone ML project, a team-built
-  full-stack ordering platform (React/Express/MongoDB/Stripe), and ongoing
-  maintenance of a live WooCommerce store — all already on my resume, no need
-  to reference them unless directly useful for a pattern/decision here.
-
-## First message to send in the new chat
-"I'm starting Stage 1 of the Classroom Portal (see PROJECT_BRIEF.md and this
-kickoff doc). Let's set up the Supabase schema and get the repo scaffolded."
+This checklist is updated as work continues, so a later session can see exactly where things
+left off.

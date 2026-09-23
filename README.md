@@ -1,5 +1,61 @@
 # classroom-portal
-Classroom portal — vanilla JS/Express/Supabase/Python WebSockets, deployed on Vercel + Render.
+
+A small full-stack classroom management app: a teacher posts a class and an assignment, a student
+joins and submits, and the teacher sees it arrive live — no page refresh. Built to demonstrate a
+typical small-team EdTech stack end to end: a JS frontend, an API service, a Postgres database with
+row-level security as the real access-control layer, a separate real-time service, and cloud file
+storage, deployed as independent services rather than one monolith.
+
+**Live demo:** https://classroom-portal-three.vercel.app — sign up as a teacher or a student to try it.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["Browser (Vercel)<br/>vanilla JS/HTML/CSS"]
+    API["Express API (Render)"]
+    RT["Realtime service (Render)<br/>FastAPI + WebSockets"]
+    DB[("Supabase<br/>Postgres + Auth + RLS")]
+    S3[("S3<br/>private bucket")]
+
+    Browser -- "sign up / log in" --> DB
+    Browser -- "REST, Bearer JWT" --> API
+    Browser -- "wss://, auth token" --> RT
+    API -- "acts as the caller — RLS enforces access" --> DB
+    API -- "presigns uploads/downloads" --> S3
+    Browser -- "uploads/downloads the file directly" --> S3
+    API -- "POST /notify, shared secret" --> RT
+```
+
+## Why this stack
+- **Vanilla JS, no framework.** At this scope a framework would add build tooling without adding
+  capability — the app is a handful of views and fetch calls, and plain DOM/fetch code shows that
+  directly rather than through an abstraction.
+- **Express.** Straightforward middleware and routing for a small REST API: role checks, input
+  validation, and three write paths that all need the same ownership rules enforced consistently.
+- **Supabase (Postgres + Auth + Row Level Security).** Access control lives in the database itself,
+  not just in application code — a teacher can only ever read/write their own classes, a student
+  only their own enrollments and submissions, enforced by policies Postgres checks on every query,
+  regardless of which service is asking.
+- **A separate Python/FastAPI service for real-time.** A second language and a different protocol
+  (WebSockets, not request/response) for the one feature that genuinely needs a persistent
+  connection, rather than bolting sockets onto the REST API.
+- **S3, accessed only through presigned URLs.** Files never pass through the API server — the
+  browser uploads and downloads directly against a private bucket, and the API's only job is
+  deciding, per request, whether this user is allowed to do that.
+- **Two platforms, three deployed services.** Vercel for the static frontend, two independent
+  services on Render for the API and the realtime server — a small, realistic version of how a
+  team actually splits a system instead of running everything in one process.
+
+## What it demonstrates
+
+| Built | Real-world pattern |
+|---|---|
+| Role-based Postgres RLS (teacher/student) | Access control enforced at the database layer, not just in application code |
+| Live WebSocket notifications | Real-time alerts — e.g. a teacher seeing a submission the instant it lands |
+| Presigned S3 uploads/downloads | The standard pattern for user-uploaded files at any real scale |
+| Class join codes | Self-service enrollment, Google-Classroom-style |
+| Two backend services on two platforms | How a small team actually splits a system, rather than one monolith |
 
 ## Layout
 - `frontend/` — vanilla JS/HTML/CSS (Vercel)
@@ -71,3 +127,6 @@ Deliberate scope cuts for a demo, not oversights:
 - **CORS is scoped to the production URL only, not Vercel's preview deployments.** This project has
   no PR/branch-preview workflow, so a preview deployment's dynamic subdomain simply can't call the API;
   only `main`'s production URL is allowed.
+
+## License
+MIT — see [`LICENSE`](LICENSE).
